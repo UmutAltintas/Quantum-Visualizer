@@ -62,13 +62,15 @@ export interface IntermediateStateResult {
 /** Payload for a challenge verification request */
 export interface ChallengeVerifyPayload {
   challengeId: string;
-  circuit: CircuitPayload;
+  numQubits: number;
+  gates: PlacedGate[];
 }
 
 /** Response from the backend /verify-challenge endpoint */
 export interface ChallengeVerifyResult {
-  success: boolean;
-  fidelity: number;
+  passed: boolean;
+  expected: Record<string, number>;
+  actual: Record<string, number>;
   message: string;
 }
 

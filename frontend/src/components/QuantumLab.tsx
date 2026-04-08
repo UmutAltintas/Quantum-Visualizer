@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -12,7 +12,8 @@ import { GatePalette } from "./GatePalette";
 import { CircuitBoard } from "./CircuitBoard";
 import { ProbabilityChart } from "./ProbabilityChart";
 import { GateToken } from "./GateToken";
-import { simulateCircuit, getIntermediateState } from "@/lib/api";
+import { ChallengePanel, Challenge } from "./ChallengePanel";
+import { simulateCircuit, getIntermediateState, getChallenges } from "@/lib/api";
 import {
   PlacedGate,
   GateType,
@@ -63,6 +64,15 @@ export function QuantumLab() {
   const [activeGate, setActiveGate] = useState<GateType | null>(null);
   const [blochData, setBlochData] = useState<IntermediateStateResult | null>(null);
   const [selectedQubit, setSelectedQubit] = useState(0);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
+
+  // Fetch challenges on mount
+  useEffect(() => {
+    getChallenges()
+      .then((data) => setChallenges(data.map((c) => ({ ...c }))))
+      .catch(() => {});
+  }, []);
 
   /* ── Drag handlers ── */
   const handleDragStart = (event: DragStartEvent) => {
@@ -169,9 +179,16 @@ export function QuantumLab() {
       onDragEnd={handleDragEnd}
     >
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-        {/* Left panel: gate palette */}
-        <aside>
+        {/* Left panel: gate palette + challenges */}
+        <aside className="space-y-6">
           <GatePalette />
+          <ChallengePanel
+            challenges={challenges}
+            gates={gates}
+            numQubits={NUM_QUBITS}
+            onSelectChallenge={setActiveChallenge}
+            activeChallenge={activeChallenge}
+          />
         </aside>
 
         {/* Main area */}

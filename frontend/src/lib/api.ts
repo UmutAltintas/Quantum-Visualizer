@@ -59,3 +59,15 @@ export async function verifyChallenge(
 ): Promise<ChallengeVerifyResult> {
   return apiFetch<ChallengeVerifyResult>("/verify-challenge", payload);
 }
+
+/**
+ * Fetches the list of available challenges.
+ */
+export async function getChallenges(): Promise<
+  { id: string; title: string; description: string; numQubits: number }[]
+> {
+  const res = await fetch(`${API_BASE}/challenges`);
+  if (!res.ok) throw new Error("Failed to load challenges");
+  return res.json();
+}
+}
