@@ -24,12 +24,7 @@ import {
   IntermediateStateResult,
 } from "@/lib/types";
 import { Play, Loader2, RotateCcw, AlertCircle, Plus, Minus } from "lucide-react";
-import dynamic from "next/dynamic";
-
-const BlochSpherePanel = dynamic(
-  () => import("./BlochSphere").then((m) => m.BlochSpherePanel),
-  { ssr: false }
-);
+import { BlochSpherePanel } from "./BlochSphere";
 
 const MIN_QUBITS = 1;
 const MAX_QUBITS = 8;

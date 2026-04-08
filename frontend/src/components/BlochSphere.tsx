@@ -1,9 +1,6 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Text, Line } from "@react-three/drei";
 import { useMemo } from "react";
-import * as THREE from "three";
 import { Globe2 } from "lucide-react";
 
 interface BlochCoords {
@@ -18,108 +15,243 @@ interface BlochSphereProps {
   onSelectQubit: (q: number) => void;
 }
 
-/** The 3D sphere + vector rendered inside the Canvas */
-function BlochSphere3D({ coords }: { coords: BlochCoords }) {
-  // Remap: Bloch convention Z=vertical, X=right, Y=depth
-  // Three.js convention: Y=up, so map Bloch(x,y,z) → Three(x,z,y) 
-  const vec = useMemo(
-    () => new THREE.Vector3(coords.x, coords.z, -coords.y),
-    [coords.x, coords.y, coords.z]
+/* ── Isometric-style projection ── */
+// Camera angles for a nice 3/4 view
+const AZIMUTH = -Math.PI / 6; // 30° rotation around vertical
+const ELEVATION = Math.PI / 6; // 30° tilt up
+
+const cosA = Math.cos(AZIMUTH);
+const sinA = Math.sin(AZIMUTH);
+const cosE = Math.cos(ELEVATION);
+const sinE = Math.sin(ELEVATION);
+
+/** Project Bloch (x, y, z) where Z is vertical to 2D (sx, sy) in [-1,1]. */
+function project(bx: number, by: number, bz: number): [number, number] {
+  // Rotate around Z (vertical) by azimuth
+  const rx = bx * cosA - by * sinA;
+  const ry = bx * sinA + by * cosA;
+  const rz = bz;
+  // Tilt by elevation: project Y into depth, Z into screen-Y
+  const sx = rx;
+  const sy = -(rz * cosE - ry * sinE);
+  return [sx, sy];
+}
+
+/** Depth for z-ordering (higher = closer to viewer) */
+function depth(bx: number, by: number, bz: number): number {
+  const ry = bx * sinA + by * cosA;
+  return ry * cosE + bz * sinE;
+}
+
+/** Generate ellipse path for a great circle */
+function greatCirclePath(
+  cx: number,
+  cy: number,
+  r: number,
+  plane: "xy" | "xz" | "yz",
+  segments = 72
+): string {
+  const pts: string[] = [];
+  for (let i = 0; i <= segments; i++) {
+    const t = (i / segments) * Math.PI * 2;
+    let bx = 0,
+      by = 0,
+      bz = 0;
+    if (plane === "xy") {
+      bx = Math.cos(t);
+      by = Math.sin(t);
+    } else if (plane === "xz") {
+      bx = Math.cos(t);
+      bz = Math.sin(t);
+    } else {
+      by = Math.cos(t);
+      bz = Math.sin(t);
+    }
+    const [sx, sy] = project(bx, by, bz);
+    pts.push(`${cx + sx * r},${cy + sy * r}`);
+  }
+  return `M${pts.join("L")}`;
+}
+
+/** SVG-based Bloch Sphere visualization */
+function BlochSphereSVG({ coords }: { coords: BlochCoords }) {
+  const size = 220;
+  const cx = size / 2;
+  const cy = size / 2;
+  const R = 85; // sphere radius in pixels
+
+  const arrowEnd = useMemo(() => {
+    const [sx, sy] = project(coords.x, coords.y, coords.z);
+    return { x: cx + sx * R, y: cy + sy * R };
+  }, [coords.x, coords.y, coords.z]);
+
+  // Axis endpoints
+  const axes = useMemo(() => {
+    const len = 1.25;
+    return {
+      xPos: project(len, 0, 0),
+      xNeg: project(-len, 0, 0),
+      yPos: project(0, len, 0),
+      yNeg: project(0, -len, 0),
+      zPos: project(0, 0, len),
+      zNeg: project(0, 0, -len),
+    };
+  }, []);
+
+  // Great circle paths
+  const circles = useMemo(
+    () => ({
+      xy: greatCirclePath(cx, cy, R, "xy"),
+      xz: greatCirclePath(cx, cy, R, "xz"),
+      yz: greatCirclePath(cx, cy, R, "yz"),
+    }),
+    []
   );
 
-  // Generate wireframe circles for the three great circles
-  const circleXZ = useMemo(() => {
-    const pts: THREE.Vector3[] = [];
-    for (let i = 0; i <= 64; i++) {
-      const angle = (i / 64) * Math.PI * 2;
-      pts.push(new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)));
-    }
-    return pts;
-  }, []);
-
-  const circleXY = useMemo(() => {
-    const pts: THREE.Vector3[] = [];
-    for (let i = 0; i <= 64; i++) {
-      const angle = (i / 64) * Math.PI * 2;
-      pts.push(new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0));
-    }
-    return pts;
-  }, []);
-
-  const circleYZ = useMemo(() => {
-    const pts: THREE.Vector3[] = [];
-    for (let i = 0; i <= 64; i++) {
-      const angle = (i / 64) * Math.PI * 2;
-      pts.push(new THREE.Vector3(0, Math.cos(angle), Math.sin(angle)));
-    }
-    return pts;
-  }, []);
+  // Vector depth determines if it's in front or behind sphere center
+  const vecDepth = depth(coords.x, coords.y, coords.z);
+  const tipOpacity = vecDepth >= 0 ? 1 : 0.5;
 
   return (
-    <>
-      {/* Semi-transparent sphere */}
-      <mesh>
-        <sphereGeometry args={[1, 32, 32]} />
-        <meshPhongMaterial
-          color="#6366f1"
-          transparent
-          opacity={0.06}
-          side={THREE.DoubleSide}
+    <svg
+      viewBox={`0 0 ${size} ${size}`}
+      className="w-full h-full"
+      style={{ maxHeight: 260 }}
+    >
+      <defs>
+        <radialGradient id="sphereGrad" cx="40%" cy="35%">
+          <stop offset="0%" stopColor="#818cf8" stopOpacity="0.15" />
+          <stop offset="100%" stopColor="#312e81" stopOpacity="0.08" />
+        </radialGradient>
+        <marker
+          id="arrowHead"
+          markerWidth="8"
+          markerHeight="8"
+          refX="6"
+          refY="4"
+          orient="auto"
+        >
+          <path d="M0,1 L6,4 L0,7" fill="#f59e0b" />
+        </marker>
+      </defs>
+
+      {/* Sphere fill */}
+      <circle cx={cx} cy={cy} r={R} fill="url(#sphereGrad)" />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={R}
+        fill="none"
+        stroke="#6366f1"
+        strokeWidth="1.5"
+        opacity="0.4"
+      />
+
+      {/* Great circles */}
+      <path
+        d={circles.xy}
+        fill="none"
+        stroke="#475569"
+        strokeWidth="0.7"
+        opacity="0.5"
+      />
+      <path
+        d={circles.xz}
+        fill="none"
+        stroke="#475569"
+        strokeWidth="0.7"
+        opacity="0.5"
+      />
+      <path
+        d={circles.yz}
+        fill="none"
+        stroke="#475569"
+        strokeWidth="0.7"
+        opacity="0.5"
+      />
+
+      {/* Axes */}
+      {(
+        [
+          ["xNeg", "xPos"],
+          ["yNeg", "yPos"],
+          ["zNeg", "zPos"],
+        ] as const
+      ).map(([neg, pos]) => (
+        <line
+          key={neg}
+          x1={cx + axes[neg][0] * R}
+          y1={cy + axes[neg][1] * R}
+          x2={cx + axes[pos][0] * R}
+          y2={cy + axes[pos][1] * R}
+          stroke="#64748b"
+          strokeWidth="0.8"
+          strokeDasharray="3,3"
         />
-      </mesh>
+      ))}
 
-      {/* Wireframe circles */}
-      <Line points={circleXZ} color="#334155" lineWidth={0.5} />
-      <Line points={circleXY} color="#334155" lineWidth={0.5} />
-      <Line points={circleYZ} color="#334155" lineWidth={0.5} />
-
-      {/* Axes — X horizontal, Y (three.js) vertical = Bloch Z, Z depth = Bloch -Y */}
-      <Line
-        points={[new THREE.Vector3(-1.3, 0, 0), new THREE.Vector3(1.3, 0, 0)]}
-        color="#475569"
-        lineWidth={1}
-      />
-      <Line
-        points={[new THREE.Vector3(0, -1.3, 0), new THREE.Vector3(0, 1.3, 0)]}
-        color="#475569"
-        lineWidth={1}
-      />
-      <Line
-        points={[new THREE.Vector3(0, 0, -1.3), new THREE.Vector3(0, 0, 1.3)]}
-        color="#475569"
-        lineWidth={1}
-      />
-
-      {/* Axis labels — Bloch convention */}
-      <Text position={[1.5, 0, 0]} fontSize={0.15} color="#94a3b8">
+      {/* Axis labels */}
+      <text
+        x={cx + axes.xPos[0] * R + 8}
+        y={cy + axes.xPos[1] * R + 3}
+        fill="#94a3b8"
+        fontSize="11"
+        fontWeight="600"
+      >
         X
-      </Text>
-      <Text position={[0, 1.5, 0]} fontSize={0.15} color="#a5f3fc">
-        |0⟩
-      </Text>
-      <Text position={[0, -1.5, 0]} fontSize={0.15} color="#fca5a5">
-        |1⟩
-      </Text>
-      <Text position={[0, 0, -1.5]} fontSize={0.15} color="#94a3b8">
+      </text>
+      <text
+        x={cx + axes.yPos[0] * R + 6}
+        y={cy + axes.yPos[1] * R + 4}
+        fill="#94a3b8"
+        fontSize="11"
+        fontWeight="600"
+      >
         Y
-      </Text>
+      </text>
+      <text
+        x={cx + axes.zPos[0] * R - 4}
+        y={cy + axes.zPos[1] * R - 8}
+        fill="#a5f3fc"
+        fontSize="11"
+        fontWeight="bold"
+      >
+        |0⟩
+      </text>
+      <text
+        x={cx + axes.zNeg[0] * R - 4}
+        y={cy + axes.zNeg[1] * R + 14}
+        fill="#fca5a5"
+        fontSize="11"
+        fontWeight="bold"
+      >
+        |1⟩
+      </text>
 
       {/* State vector arrow */}
-      <Line
-        points={[new THREE.Vector3(0, 0, 0), vec]}
-        color="#f59e0b"
-        lineWidth={3}
+      <line
+        x1={cx}
+        y1={cy}
+        x2={arrowEnd.x}
+        y2={arrowEnd.y}
+        stroke="#f59e0b"
+        strokeWidth="2.5"
+        markerEnd="url(#arrowHead)"
+        opacity={tipOpacity}
       />
-      {/* Arrow tip sphere */}
-      <mesh position={vec}>
-        <sphereGeometry args={[0.06, 16, 16]} />
-        <meshBasicMaterial color="#f59e0b" />
-      </mesh>
 
-      {/* Lighting */}
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 5, 5]} intensity={0.4} />
-    </>
+      {/* Tip dot */}
+      <circle
+        cx={arrowEnd.x}
+        cy={arrowEnd.y}
+        r="4"
+        fill="#f59e0b"
+        opacity={tipOpacity}
+      />
+
+      {/* Origin dot */}
+      <circle cx={cx} cy={cy} r="2" fill="#94a3b8" opacity="0.6" />
+    </svg>
   );
 }
 
@@ -138,7 +270,7 @@ export function BlochSpherePanel({
       </h2>
 
       {/* Qubit selector tabs */}
-      <div className="mb-3 flex gap-1">
+      <div className="mb-3 flex flex-wrap gap-1">
         {blochCoords.map((_, i) => (
           <button
             key={i}
@@ -154,16 +286,9 @@ export function BlochSpherePanel({
         ))}
       </div>
 
-      {/* 3D Canvas */}
-      <div className="h-64 w-full rounded-lg bg-slate-900/60 border border-slate-700/30 overflow-hidden">
-        <Canvas camera={{ position: [2.2, 1.8, 2.2], fov: 40 }}>
-          <BlochSphere3D coords={coords} />
-          <OrbitControls
-            enableZoom={false}
-            enablePan={false}
-            rotateSpeed={0.5}
-          />
-        </Canvas>
+      {/* SVG Bloch sphere */}
+      <div className="flex items-center justify-center rounded-lg bg-slate-900/60 border border-slate-700/30 p-2">
+        <BlochSphereSVG coords={coords} />
       </div>
 
       {/* Coordinates display */}
