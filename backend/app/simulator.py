@@ -1,14 +1,11 @@
-"""Qiskit circuit builder and AerSimulator runner."""
+"""Qiskit circuit builder and Statevector-based simulator."""
 
 from __future__ import annotations
 
 from qiskit import QuantumCircuit
-from qiskit_aer import AerSimulator
+from qiskit.quantum_info import Statevector
 
 from .schemas import CircuitPayload, PlacedGate, SimulationResult
-
-# Reusable simulator instance
-_simulator = AerSimulator()
 
 
 def _apply_gate(qc: QuantumCircuit, gate: PlacedGate) -> None:
@@ -27,17 +24,18 @@ def _apply_gate(qc: QuantumCircuit, gate: PlacedGate) -> None:
             qc.cx(gate.control, gate.target)
 
 
-def build_and_simulate(payload: CircuitPayload, shots: int = 4096) -> SimulationResult:
+def build_and_simulate(payload: CircuitPayload) -> SimulationResult:
     """
-    Build a Qiskit circuit from the payload, simulate it, and return
-    measurement probabilities.
+    Build a Qiskit circuit from the payload, compute the statevector,
+    and return exact measurement probabilities.
+
+    Uses Qiskit's Statevector class for a deterministic, noiseless
+    simulation – ideal for educational visualization.
 
     Parameters
     ----------
     payload : CircuitPayload
         Validated circuit description from the frontend.
-    shots : int
-        Number of simulation shots (more = smoother probabilities).
 
     Returns
     -------
@@ -63,20 +61,15 @@ def build_and_simulate(payload: CircuitPayload, shots: int = 4096) -> Simulation
             )
         _apply_gate(qc, gate)
 
-    # Add measurements on all qubits
-    qc.measure_all()
+    # Get exact probabilities from statevector
+    sv = Statevector.from_instruction(qc)
+    probs_dict = sv.probabilities_dict()
 
-    # Run simulation
-    result = _simulator.run(qc, shots=shots).result()
-    counts = result.get_counts()
-
-    # Convert counts to probabilities
+    # Ensure all basis states are present
     probabilities: dict[str, float] = {}
-
-    # Ensure all possible states are present (even zero-probability ones)
     num_states = 2 ** payload.num_qubits
     for i in range(num_states):
         state_label = format(i, f"0{payload.num_qubits}b")
-        probabilities[state_label] = counts.get(state_label, 0) / shots
+        probabilities[state_label] = round(probs_dict.get(state_label, 0.0), 6)
 
     return SimulationResult(probabilities=probabilities)
