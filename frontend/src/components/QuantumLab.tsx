@@ -12,7 +12,7 @@ import { GatePalette } from "./GatePalette";
 import { CircuitBoard } from "./CircuitBoard";
 import { ProbabilityChart } from "./ProbabilityChart";
 import { GateToken } from "./GateToken";
-import { simulateCircuit } from "@/lib/api";
+import { simulateCircuit, getIntermediateState } from "@/lib/api";
 import {
   PlacedGate,
   GateType,
@@ -21,8 +21,15 @@ import {
   PARAMETERIZED_GATES,
   TWO_QUBIT_GATES,
   THREE_QUBIT_GATES,
+  IntermediateStateResult,
 } from "@/lib/types";
 import { Play, Loader2, RotateCcw, AlertCircle } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const BlochSpherePanel = dynamic(
+  () => import("./BlochSphere").then((m) => m.BlochSpherePanel),
+  { ssr: false }
+);
 
 const NUM_QUBITS = 3;
 const NUM_STEPS = 8;
@@ -54,6 +61,8 @@ export function QuantumLab() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeGate, setActiveGate] = useState<GateType | null>(null);
+  const [blochData, setBlochData] = useState<IntermediateStateResult | null>(null);
+  const [selectedQubit, setSelectedQubit] = useState(0);
 
   /* ── Drag handlers ── */
   const handleDragStart = (event: DragStartEvent) => {
@@ -126,11 +135,17 @@ export function QuantumLab() {
     setLoading(true);
     setError(null);
     try {
-      const res = await simulateCircuit({ numQubits: NUM_QUBITS, gates });
+      const maxStep = Math.max(...gates.map((g) => g.step), 0);
+      const [res, bloch] = await Promise.all([
+        simulateCircuit({ numQubits: NUM_QUBITS, gates }),
+        getIntermediateState({ numQubits: NUM_QUBITS, gates, upToStep: maxStep }),
+      ]);
       setResult(res);
+      setBlochData(bloch);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
       setResult(null);
+      setBlochData(null);
     } finally {
       setLoading(false);
     }
@@ -204,8 +219,19 @@ export function QuantumLab() {
             </div>
           )}
 
-          {/* Results chart */}
-          {result && <ProbabilityChart probabilities={result.probabilities} />}
+          {/* Results chart + Bloch sphere */}
+          {result && (
+            <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+              <ProbabilityChart probabilities={result.probabilities} />
+              {blochData && (
+                <BlochSpherePanel
+                  blochCoords={blochData.bloch_coords}
+                  selectedQubit={selectedQubit}
+                  onSelectQubit={setSelectedQubit}
+                />
+              )}
+            </div>
+          )}
         </div>
       </div>
 

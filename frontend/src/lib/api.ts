@@ -41,18 +41,14 @@ export async function simulateCircuit(
 }
 
 /**
- * Gets the intermediate single-qubit statevector at a specific step.
+ * Gets the intermediate state (probabilities + Bloch coords) up to a given step.
  */
-export async function getIntermediateState(
-  payload: CircuitPayload,
-  qubitIndex: number,
-  atStep: number
-): Promise<IntermediateStateResult> {
-  return apiFetch<IntermediateStateResult>("/intermediate-state", {
-    ...payload,
-    qubitIndex,
-    atStep,
-  });
+export async function getIntermediateState(payload: {
+  numQubits: number;
+  gates: import("./types").PlacedGate[];
+  upToStep: number;
+}): Promise<IntermediateStateResult> {
+  return apiFetch<IntermediateStateResult>("/intermediate-state", payload);
 }
 
 /**

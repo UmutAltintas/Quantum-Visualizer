@@ -48,11 +48,15 @@ export interface SimulationResult {
 }
 
 /** Response from the backend /intermediate-state endpoint */
+export interface BlochCoords {
+  x: number;
+  y: number;
+  z: number;
+}
+
 export interface IntermediateStateResult {
-  /** [theta, phi] angles on the Bloch sphere in radians */
-  bloch_angles: [number, number];
-  /** Complex amplitudes [alpha_real, alpha_imag, beta_real, beta_imag] */
-  amplitudes: [number, number, number, number];
+  probabilities: Record<string, number>;
+  bloch_coords: BlochCoords[];
 }
 
 /** Payload for a challenge verification request */
