@@ -1,15 +1,32 @@
 @import "tailwindcss";
 
-:root {
-  --wire-color: #64748b;
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-card: #334155;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
+body {
+  background: #0a0f1e;
+  color: #f1f5f9;
 }
 
-body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
+/* Subtle grid background for the main area */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.04) 1px, transparent 0);
+  background-size: 32px 32px;
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }

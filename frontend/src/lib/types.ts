@@ -42,6 +42,8 @@ export interface GateInfo {
   label: string;
   color: string;
   description: string;
+  /** LaTeX-style matrix representation for educational tooltips */
+  matrix: string;
 }
 
 /** All available gates with educational descriptions */
@@ -52,6 +54,7 @@ export const GATE_CATALOG: GateInfo[] = [
     color: "#6366f1",
     description:
       "Hadamard gate – puts a qubit into an equal superposition of |0⟩ and |1⟩. It's like flipping a perfectly fair coin.",
+    matrix: "1/√2 × [[1, 1], [1, -1]]",
   },
   {
     type: "X",
@@ -59,6 +62,7 @@ export const GATE_CATALOG: GateInfo[] = [
     color: "#ef4444",
     description:
       "Pauli-X gate – flips |0⟩ to |1⟩ and vice versa. It behaves like a classical NOT gate.",
+    matrix: "[[0, 1], [1, 0]]",
   },
   {
     type: "Y",
@@ -66,6 +70,7 @@ export const GATE_CATALOG: GateInfo[] = [
     color: "#f59e0b",
     description:
       "Pauli-Y gate – rotates the qubit state around the Y-axis of the Bloch sphere, combining a bit-flip and a phase-flip.",
+    matrix: "[[0, -i], [i, 0]]",
   },
   {
     type: "Z",
@@ -73,6 +78,7 @@ export const GATE_CATALOG: GateInfo[] = [
     color: "#10b981",
     description:
       "Pauli-Z gate – flips the phase of |1⟩ without changing |0⟩. It adds a minus sign to the |1⟩ component.",
+    matrix: "[[1, 0], [0, -1]]",
   },
   {
     type: "CX",
@@ -80,5 +86,6 @@ export const GATE_CATALOG: GateInfo[] = [
     color: "#3b82f6",
     description:
       "Controlled-NOT (CNOT) gate – flips the target qubit only if the control qubit is |1⟩. It creates entanglement between two qubits.",
+    matrix: "[[1,0,0,0], [0,1,0,0], [0,0,0,1], [0,0,1,0]]",
   },
 ];
