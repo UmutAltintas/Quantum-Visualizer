@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import math
-
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Statevector, partial_trace, DensityMatrix
@@ -116,51 +114,3 @@ def intermediate_state(payload: IntermediateStatePayload) -> IntermediateStateRe
         probabilities=_statevector_probabilities(sv, payload.num_qubits),
         bloch_coords=_bloch_coords(sv, payload.num_qubits),
     )
-
-
-# ── Challenge definitions ────────────────────────────────────────
-
-CHALLENGES: dict[str, dict] = {
-    "bell-state": {
-        "title": "Create a Bell State",
-        "description": "Produce the state (|00⟩ + |11⟩)/√2 using 2 qubits.",
-        "num_qubits": 2,
-        "expected": {"00": 0.5, "01": 0.0, "10": 0.0, "11": 0.5},
-        "tolerance": 0.01,
-    },
-    "ghz-state": {
-        "title": "Create a GHZ State",
-        "description": "Produce the state (|000⟩ + |111⟩)/√2 using 3 qubits.",
-        "num_qubits": 3,
-        "expected": {"000": 0.5, "001": 0.0, "010": 0.0, "011": 0.0,
-                     "100": 0.0, "101": 0.0, "110": 0.0, "111": 0.5},
-        "tolerance": 0.01,
-    },
-    "superposition": {
-        "title": "Equal Superposition",
-        "description": "Put all 2 qubits into equal superposition (each basis state = 25%).",
-        "num_qubits": 2,
-        "expected": {"00": 0.25, "01": 0.25, "10": 0.25, "11": 0.25},
-        "tolerance": 0.01,
-    },
-}
-
-
-def verify_challenge(challenge_id: str, num_qubits: int, gates: list[PlacedGate]) -> dict:
-    """Check if the user's circuit solves a challenge."""
-    challenge = CHALLENGES.get(challenge_id)
-    if not challenge:
-        raise ValueError(f"Unknown challenge: {challenge_id}")
-
-    qc = _build_circuit(num_qubits, gates)
-    sv = Statevector.from_instruction(qc)
-    actual = _statevector_probabilities(sv, num_qubits)
-    expected = challenge["expected"]
-    tol = challenge["tolerance"]
-
-    passed = all(
-        abs(actual.get(k, 0.0) - v) <= tol for k, v in expected.items()
-    )
-    message = "Correct! Well done!" if passed else "Not quite – check your circuit and try again."
-
-    return {"passed": passed, "expected": expected, "actual": actual, "message": message}

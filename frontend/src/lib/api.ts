@@ -1,9 +1,6 @@
 import {
-  CircuitPayload,
   SimulationResult,
   IntermediateStateResult,
-  ChallengeVerifyPayload,
-  ChallengeVerifyResult,
   ApiError,
 } from "./types";
 
@@ -49,24 +46,4 @@ export async function getIntermediateState(payload: {
   upToStep: number;
 }): Promise<IntermediateStateResult> {
   return apiFetch<IntermediateStateResult>("/intermediate-state", payload);
-}
-
-/**
- * Verifies a user's circuit against a challenge target state.
- */
-export async function verifyChallenge(
-  payload: ChallengeVerifyPayload
-): Promise<ChallengeVerifyResult> {
-  return apiFetch<ChallengeVerifyResult>("/verify-challenge", payload);
-}
-
-/**
- * Fetches the list of available challenges.
- */
-export async function getChallenges(): Promise<
-  { id: string; title: string; description: string; numQubits: number }[]
-> {
-  const res = await fetch(`${API_BASE}/challenges`);
-  if (!res.ok) throw new Error("Failed to load challenges");
-  return res.json();
 }

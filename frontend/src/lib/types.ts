@@ -59,21 +59,6 @@ export interface IntermediateStateResult {
   bloch_coords: BlochCoords[];
 }
 
-/** Payload for a challenge verification request */
-export interface ChallengeVerifyPayload {
-  challengeId: string;
-  numQubits: number;
-  gates: PlacedGate[];
-}
-
-/** Response from the backend /verify-challenge endpoint */
-export interface ChallengeVerifyResult {
-  passed: boolean;
-  expected: Record<string, number>;
-  actual: Record<string, number>;
-  message: string;
-}
-
 /** Error response from the backend */
 export interface ApiError {
   detail: string;

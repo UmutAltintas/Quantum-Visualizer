@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -12,8 +12,7 @@ import { GatePalette } from "./GatePalette";
 import { CircuitBoard } from "./CircuitBoard";
 import { ProbabilityChart } from "./ProbabilityChart";
 import { GateToken } from "./GateToken";
-import { ChallengePanel, Challenge } from "./ChallengePanel";
-import { simulateCircuit, getIntermediateState, getChallenges } from "@/lib/api";
+import { simulateCircuit, getIntermediateState } from "@/lib/api";
 import {
   PlacedGate,
   GateType,
@@ -66,15 +65,6 @@ export function QuantumLab() {
   const [activeGate, setActiveGate] = useState<GateType | null>(null);
   const [blochData, setBlochData] = useState<IntermediateStateResult | null>(null);
   const [selectedQubit, setSelectedQubit] = useState(0);
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
-
-  // Fetch challenges on mount
-  useEffect(() => {
-    getChallenges()
-      .then((data) => setChallenges(data.map((c) => ({ ...c }))))
-      .catch(() => {});
-  }, []);
 
   /* ── Drag handlers ── */
   const handleDragStart = (event: DragStartEvent) => {
@@ -161,9 +151,8 @@ export function QuantumLab() {
     } finally {
       setLoading(false);
     }
-  }, [gates]);
+  }, [gates, numQubits]);
 
-  /* ── Clear circuit ── */
   const handleClear = useCallback(() => {
     setGates([]);
     setResult(null);
@@ -206,23 +195,24 @@ export function QuantumLab() {
     ? GATE_CATALOG.find((g) => g.type === activeGate)
     : null;
 
+  // Default Bloch coords: all qubits at |0⟩ (z=1)
+  const defaultBloch = Array.from({ length: numQubits }, () => ({
+    x: 0,
+    y: 0,
+    z: 1,
+  }));
+  const displayBloch = blochData?.bloch_coords ?? defaultBloch;
+
   return (
     <DndContext
       collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-        {/* Left panel: gate palette + challenges */}
+      <div className="grid gap-6 lg:grid-cols-[240px_1fr_280px]">
+        {/* Left panel: gate palette */}
         <aside className="space-y-6">
           <GatePalette />
-          <ChallengePanel
-            challenges={challenges}
-            gates={gates}
-            numQubits={numQubits}
-            onSelectChallenge={setActiveChallenge}
-            activeChallenge={activeChallenge}
-          />
         </aside>
 
         {/* Main area */}
@@ -294,20 +284,20 @@ export function QuantumLab() {
             </div>
           )}
 
-          {/* Results chart + Bloch sphere */}
+          {/* Results chart */}
           {result && (
-            <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-              <ProbabilityChart probabilities={result.probabilities} />
-              {blochData && (
-                <BlochSpherePanel
-                  blochCoords={blochData.bloch_coords}
-                  selectedQubit={selectedQubit}
-                  onSelectQubit={setSelectedQubit}
-                />
-              )}
-            </div>
+            <ProbabilityChart probabilities={result.probabilities} />
           )}
         </div>
+
+        {/* Right panel: Bloch sphere */}
+        <aside>
+          <BlochSpherePanel
+            blochCoords={displayBloch}
+            selectedQubit={selectedQubit}
+            onSelectQubit={setSelectedQubit}
+          />
+        </aside>
       </div>
 
       {/* Drag overlay — ghost that follows cursor */}

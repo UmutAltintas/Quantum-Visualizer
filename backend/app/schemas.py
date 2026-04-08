@@ -84,16 +84,3 @@ class IntermediateStateResult(BaseModel):
     bloch_coords: list[BlochCoords] = Field(
         ..., description="Bloch sphere coords per qubit"
     )
-
-
-class ChallengeVerifyPayload(BaseModel):
-    challenge_id: str = Field(..., alias="challengeId")
-    num_qubits: int = Field(..., ge=1, le=8, alias="numQubits")
-    gates: list[PlacedGate]
-
-
-class ChallengeVerifyResult(BaseModel):
-    passed: bool
-    expected: dict[str, float]
-    actual: dict[str, float]
-    message: str

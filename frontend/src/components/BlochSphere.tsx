@@ -20,21 +20,28 @@ interface BlochSphereProps {
 
 /** The 3D sphere + vector rendered inside the Canvas */
 function BlochSphere3D({ coords }: { coords: BlochCoords }) {
-  // Generate wireframe circles for the three great circles
-  const circleXY = useMemo(() => {
-    const pts: THREE.Vector3[] = [];
-    for (let i = 0; i <= 64; i++) {
-      const angle = (i / 64) * Math.PI * 2;
-      pts.push(new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0));
-    }
-    return pts;
-  }, []);
+  // Remap: Bloch convention Z=vertical, X=right, Y=depth
+  // Three.js convention: Y=up, so map Bloch(x,y,z) → Three(x,z,y) 
+  const vec = useMemo(
+    () => new THREE.Vector3(coords.x, coords.z, -coords.y),
+    [coords.x, coords.y, coords.z]
+  );
 
+  // Generate wireframe circles for the three great circles
   const circleXZ = useMemo(() => {
     const pts: THREE.Vector3[] = [];
     for (let i = 0; i <= 64; i++) {
       const angle = (i / 64) * Math.PI * 2;
       pts.push(new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)));
+    }
+    return pts;
+  }, []);
+
+  const circleXY = useMemo(() => {
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i <= 64; i++) {
+      const angle = (i / 64) * Math.PI * 2;
+      pts.push(new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0));
     }
     return pts;
   }, []);
@@ -62,11 +69,11 @@ function BlochSphere3D({ coords }: { coords: BlochCoords }) {
       </mesh>
 
       {/* Wireframe circles */}
-      <Line points={circleXY} color="#334155" lineWidth={0.5} />
       <Line points={circleXZ} color="#334155" lineWidth={0.5} />
+      <Line points={circleXY} color="#334155" lineWidth={0.5} />
       <Line points={circleYZ} color="#334155" lineWidth={0.5} />
 
-      {/* Axes */}
+      {/* Axes — X horizontal, Y (three.js) vertical = Bloch Z, Z depth = Bloch -Y */}
       <Line
         points={[new THREE.Vector3(-1.3, 0, 0), new THREE.Vector3(1.3, 0, 0)]}
         color="#475569"
@@ -83,31 +90,28 @@ function BlochSphere3D({ coords }: { coords: BlochCoords }) {
         lineWidth={1}
       />
 
-      {/* Axis labels */}
+      {/* Axis labels — Bloch convention */}
       <Text position={[1.5, 0, 0]} fontSize={0.15} color="#94a3b8">
         X
       </Text>
-      <Text position={[0, 1.5, 0]} fontSize={0.15} color="#94a3b8">
-        Y
-      </Text>
-      <Text position={[0, 0, 1.5]} fontSize={0.15} color="#94a3b8">
+      <Text position={[0, 1.5, 0]} fontSize={0.15} color="#a5f3fc">
         |0⟩
       </Text>
-      <Text position={[0, 0, -1.5]} fontSize={0.15} color="#94a3b8">
+      <Text position={[0, -1.5, 0]} fontSize={0.15} color="#fca5a5">
         |1⟩
+      </Text>
+      <Text position={[0, 0, -1.5]} fontSize={0.15} color="#94a3b8">
+        Y
       </Text>
 
       {/* State vector arrow */}
       <Line
-        points={[
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(coords.x, coords.y, coords.z),
-        ]}
+        points={[new THREE.Vector3(0, 0, 0), vec]}
         color="#f59e0b"
         lineWidth={3}
       />
       {/* Arrow tip sphere */}
-      <mesh position={[coords.x, coords.y, coords.z]}>
+      <mesh position={vec}>
         <sphereGeometry args={[0.06, 16, 16]} />
         <meshBasicMaterial color="#f59e0b" />
       </mesh>
@@ -152,7 +156,7 @@ export function BlochSpherePanel({
 
       {/* 3D Canvas */}
       <div className="h-64 w-full rounded-lg bg-slate-900/60 border border-slate-700/30 overflow-hidden">
-        <Canvas camera={{ position: [2.5, 1.5, 2.5], fov: 40 }}>
+        <Canvas camera={{ position: [2.2, 1.8, 2.2], fov: 40 }}>
           <BlochSphere3D coords={coords} />
           <OrbitControls
             enableZoom={false}

@@ -3,14 +3,12 @@
 from fastapi import APIRouter, HTTPException
 
 from ..schemas import (
-    ChallengeVerifyPayload,
-    ChallengeVerifyResult,
     CircuitPayload,
     IntermediateStatePayload,
     IntermediateStateResult,
     SimulationResult,
 )
-from ..simulator import build_and_simulate, intermediate_state, verify_challenge, CHALLENGES
+from ..simulator import build_and_simulate, intermediate_state
 
 router = APIRouter()
 
@@ -33,22 +31,3 @@ async def get_intermediate_state(payload: IntermediateStatePayload) -> Intermedi
         raise HTTPException(status_code=422, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Intermediate state failed: {exc}")
-
-
-@router.post("/verify-challenge", response_model=ChallengeVerifyResult)
-async def verify(payload: ChallengeVerifyPayload) -> ChallengeVerifyResult:
-    try:
-        result = verify_challenge(payload.challenge_id, payload.num_qubits, payload.gates)
-        return ChallengeVerifyResult(**result)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Challenge verification failed: {exc}")
-
-
-@router.get("/challenges")
-async def list_challenges() -> list[dict]:
-    return [
-        {"id": k, "title": v["title"], "description": v["description"], "numQubits": v["num_qubits"]}
-        for k, v in CHALLENGES.items()
-    ]
