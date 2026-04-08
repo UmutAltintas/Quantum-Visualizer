@@ -18,11 +18,35 @@ import {
   GateType,
   SimulationResult,
   GATE_CATALOG,
+  PARAMETERIZED_GATES,
+  TWO_QUBIT_GATES,
+  THREE_QUBIT_GATES,
 } from "@/lib/types";
 import { Play, Loader2, RotateCcw, AlertCircle } from "lucide-react";
 
 const NUM_QUBITS = 3;
 const NUM_STEPS = 8;
+
+/** Compute qubit assignments when a multi-qubit gate is dropped */
+function resolveGateQubits(
+  gateType: GateType,
+  dropQubit: number,
+  numQubits: number
+): Partial<PlacedGate> {
+  if (THREE_QUBIT_GATES.includes(gateType)) {
+    // CCX needs 3 qubits: ensure we fit
+    const target = Math.min(dropQubit, numQubits - 1);
+    const control = target >= 1 ? target - 1 : 1;
+    const control2 = target >= 2 ? target - 2 : 2;
+    return { target, control, control2 };
+  }
+  if (TWO_QUBIT_GATES.includes(gateType)) {
+    // CX / SWAP: control + target
+    if (dropQubit === 0) return { target: 1, control: 0 };
+    return { target: dropQubit, control: dropQubit - 1 };
+  }
+  return { target: dropQubit };
+}
 
 export function QuantumLab() {
   const [gates, setGates] = useState<PlacedGate[]>([]);
@@ -33,9 +57,7 @@ export function QuantumLab() {
 
   /* ── Drag handlers ── */
   const handleDragStart = (event: DragStartEvent) => {
-    const gateType = event.active.data.current?.gateType as
-      | GateType
-      | undefined;
+    const gateType = event.active.data.current?.gateType as GateType | undefined;
     if (gateType) setActiveGate(gateType);
   };
 
@@ -45,51 +67,52 @@ export function QuantumLab() {
       const { active, over } = event;
       if (!over) return;
 
-      // Parse the drop zone id: "cell-{qubit}-{step}"
       const match = over.id.toString().match(/^cell-(\d+)-(\d+)$/);
       if (!match) return;
 
-      const target = parseInt(match[1], 10);
+      const dropQubit = parseInt(match[1], 10);
       const step = parseInt(match[2], 10);
       const gateType = active.data.current?.gateType as GateType;
       if (!gateType) return;
 
-      // For CX: if dropped on qubit 0, control=0 target=1; else control=target-1, target=target
       const isExistingGate = active.data.current?.isPlaced === true;
+      const qubits = resolveGateQubits(gateType, dropQubit, NUM_QUBITS);
 
       if (isExistingGate) {
-        // Move an existing gate
         const gateId = active.id.toString();
         setGates((prev) =>
-          prev.map((g) => {
-            if (g.id !== gateId) return g;
-            if (gateType === "CX") {
-              const control = target === 0 ? 0 : target - 1;
-              const cxTarget = target === 0 ? 1 : target;
-              return { ...g, target: cxTarget, control, step };
-            }
-            return { ...g, target, step };
-          })
+          prev.map((g) =>
+            g.id === gateId ? { ...g, ...qubits, step } : g
+          )
         );
       } else {
-        // Place a new gate
         const id = `gate-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-        const newGate: PlacedGate = { id, gate: gateType, target, step };
-
-        if (gateType === "CX") {
-          newGate.control = target === 0 ? 0 : target - 1;
-          newGate.target = target === 0 ? 1 : target;
-        }
-
+        const newGate: PlacedGate = {
+          id,
+          gate: gateType,
+          target: qubits.target ?? dropQubit,
+          step,
+          ...(qubits.control !== undefined && { control: qubits.control }),
+          ...(qubits.control2 !== undefined && { control2: qubits.control2 }),
+          ...(PARAMETERIZED_GATES.includes(gateType) && { angle: Math.PI / 2 }),
+        };
         setGates((prev) => [...prev, newGate]);
       }
 
-      // Clear previous result when circuit changes
       setResult(null);
       setError(null);
     },
     []
   );
+
+  /* ── Update gate angle (for parameterized gates) ── */
+  const handleUpdateAngle = useCallback((id: string, angle: number) => {
+    setGates((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, angle } : g))
+    );
+    setResult(null);
+    setError(null);
+  }, []);
 
   /* ── Remove gate on right-click ── */
   const handleRemoveGate = useCallback((id: string) => {
@@ -143,6 +166,7 @@ export function QuantumLab() {
             numSteps={NUM_STEPS}
             gates={gates}
             onRemoveGate={handleRemoveGate}
+            onUpdateAngle={handleUpdateAngle}
           />
 
           {/* Action buttons */}
