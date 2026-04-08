@@ -19,6 +19,7 @@ import {
   SimulationResult,
   GATE_CATALOG,
 } from "@/lib/types";
+import { Play, Loader2, RotateCcw, AlertCircle } from "lucide-react";
 
 const NUM_QUBITS = 3;
 const NUM_STEPS = 8;
@@ -149,23 +150,33 @@ export function QuantumLab() {
             <button
               onClick={handleSimulate}
               disabled={loading || gates.length === 0}
-              className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-white transition-all duration-200 hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
             >
-              {loading ? "Simulating…" : "▶ Simulate"}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+              {loading ? "Simulating…" : "Simulate"}
             </button>
             <button
               onClick={handleClear}
               disabled={gates.length === 0}
-              className="rounded-lg border border-slate-600 px-6 py-2.5 font-semibold text-slate-300 transition hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 rounded-lg border border-slate-600 px-6 py-2.5 font-semibold text-slate-300 transition-all duration-200 hover:bg-slate-700 hover:border-slate-500 disabled:opacity-40 disabled:cursor-not-allowed"
             >
+              <RotateCcw className="h-4 w-4" />
               Clear Circuit
             </button>
           </div>
 
           {/* Error state */}
           {error && (
-            <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-4 text-red-300">
-              <strong>Error:</strong> {error}
+            <div className="flex items-start gap-3 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-300">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <strong className="font-semibold">Simulation Error</strong>
+                <p className="mt-1 text-sm text-red-300/80">{error}</p>
+              </div>
             </div>
           )}
 
@@ -175,9 +186,9 @@ export function QuantumLab() {
       </div>
 
       {/* Drag overlay — ghost that follows cursor */}
-      <DragOverlay>
+      <DragOverlay dropAnimation={null}>
         {activeGateInfo ? (
-          <GateToken gate={activeGateInfo} className="opacity-80 scale-110" />
+          <GateToken gate={activeGateInfo} isDragging className="opacity-90" />
         ) : null}
       </DragOverlay>
     </DndContext>
