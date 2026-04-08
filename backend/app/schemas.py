@@ -51,7 +51,7 @@ class PlacedGate(BaseModel):
 class CircuitPayload(BaseModel):
     """Request body for the /simulate endpoint."""
 
-    num_qubits: int = Field(..., ge=2, le=3, alias="numQubits")
+    num_qubits: int = Field(..., ge=1, le=8, alias="numQubits")
     gates: list[PlacedGate] = Field(
         ..., description="Ordered list of gates to apply"
     )
@@ -68,7 +68,7 @@ class SimulationResult(BaseModel):
 class IntermediateStatePayload(BaseModel):
     """Request body for the /intermediate-state endpoint."""
 
-    num_qubits: int = Field(..., ge=2, le=3, alias="numQubits")
+    num_qubits: int = Field(..., ge=1, le=8, alias="numQubits")
     gates: list[PlacedGate]
     up_to_step: int = Field(..., ge=0, alias="upToStep")
 
@@ -88,7 +88,7 @@ class IntermediateStateResult(BaseModel):
 
 class ChallengeVerifyPayload(BaseModel):
     challenge_id: str = Field(..., alias="challengeId")
-    num_qubits: int = Field(..., ge=2, le=3, alias="numQubits")
+    num_qubits: int = Field(..., ge=1, le=8, alias="numQubits")
     gates: list[PlacedGate]
 
 

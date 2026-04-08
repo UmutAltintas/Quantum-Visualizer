@@ -70,4 +70,3 @@ export async function getChallenges(): Promise<
   if (!res.ok) throw new Error("Failed to load challenges");
   return res.json();
 }
-}

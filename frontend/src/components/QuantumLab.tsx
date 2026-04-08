@@ -24,7 +24,7 @@ import {
   THREE_QUBIT_GATES,
   IntermediateStateResult,
 } from "@/lib/types";
-import { Play, Loader2, RotateCcw, AlertCircle } from "lucide-react";
+import { Play, Loader2, RotateCcw, AlertCircle, Plus, Minus } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const BlochSpherePanel = dynamic(
@@ -32,7 +32,8 @@ const BlochSpherePanel = dynamic(
   { ssr: false }
 );
 
-const NUM_QUBITS = 3;
+const MIN_QUBITS = 1;
+const MAX_QUBITS = 8;
 const NUM_STEPS = 8;
 
 /** Compute qubit assignments when a multi-qubit gate is dropped */
@@ -57,6 +58,7 @@ function resolveGateQubits(
 }
 
 export function QuantumLab() {
+  const [numQubits, setNumQubits] = useState(3);
   const [gates, setGates] = useState<PlacedGate[]>([]);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -95,7 +97,7 @@ export function QuantumLab() {
       if (!gateType) return;
 
       const isExistingGate = active.data.current?.isPlaced === true;
-      const qubits = resolveGateQubits(gateType, dropQubit, NUM_QUBITS);
+      const qubits = resolveGateQubits(gateType, dropQubit, numQubits);
 
       if (isExistingGate) {
         const gateId = active.id.toString();
@@ -121,7 +123,7 @@ export function QuantumLab() {
       setResult(null);
       setError(null);
     },
-    []
+    [numQubits]
   );
 
   /* ── Update gate angle (for parameterized gates) ── */
@@ -147,8 +149,8 @@ export function QuantumLab() {
     try {
       const maxStep = Math.max(...gates.map((g) => g.step), 0);
       const [res, bloch] = await Promise.all([
-        simulateCircuit({ numQubits: NUM_QUBITS, gates }),
-        getIntermediateState({ numQubits: NUM_QUBITS, gates, upToStep: maxStep }),
+        simulateCircuit({ numQubits, gates }),
+        getIntermediateState({ numQubits, gates, upToStep: maxStep }),
       ]);
       setResult(res);
       setBlochData(bloch);
@@ -164,6 +166,38 @@ export function QuantumLab() {
   /* ── Clear circuit ── */
   const handleClear = useCallback(() => {
     setGates([]);
+    setResult(null);
+    setError(null);
+  }, []);
+
+  /* ── Add / remove qubits ── */
+  const handleAddQubit = useCallback(() => {
+    setNumQubits((n) => Math.min(n + 1, MAX_QUBITS));
+    setResult(null);
+  }, []);
+
+  const handleRemoveQubit = useCallback(() => {
+    setNumQubits((n) => {
+      const next = Math.max(n - 1, MIN_QUBITS);
+      // Remove gates that reference the removed qubit
+      setGates((prev) =>
+        prev.filter(
+          (g) =>
+            g.target < next &&
+            (g.control === undefined || g.control < next) &&
+            (g.control2 === undefined || g.control2 < next)
+        )
+      );
+      return next;
+    });
+    setResult(null);
+  }, []);
+
+  /* ── Update a placed gate (for CX/SWAP/CCX connection editing) ── */
+  const handleUpdateGate = useCallback((id: string, updates: Partial<PlacedGate>) => {
+    setGates((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, ...updates } : g))
+    );
     setResult(null);
     setError(null);
   }, []);
@@ -185,7 +219,7 @@ export function QuantumLab() {
           <ChallengePanel
             challenges={challenges}
             gates={gates}
-            numQubits={NUM_QUBITS}
+            numQubits={numQubits}
             onSelectChallenge={setActiveChallenge}
             activeChallenge={activeChallenge}
           />
@@ -193,12 +227,36 @@ export function QuantumLab() {
 
         {/* Main area */}
         <div className="space-y-6">
+          {/* Qubit controls */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Qubits: {numQubits}
+            </span>
+            <button
+              onClick={handleRemoveQubit}
+              disabled={numQubits <= MIN_QUBITS}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-600 text-slate-400 transition-colors hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Remove qubit"
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={handleAddQubit}
+              disabled={numQubits >= MAX_QUBITS}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-600 text-slate-400 transition-colors hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Add qubit"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
           <CircuitBoard
-            numQubits={NUM_QUBITS}
+            numQubits={numQubits}
             numSteps={NUM_STEPS}
             gates={gates}
             onRemoveGate={handleRemoveGate}
             onUpdateAngle={handleUpdateAngle}
+            onUpdateGate={handleUpdateGate}
           />
 
           {/* Action buttons */}
