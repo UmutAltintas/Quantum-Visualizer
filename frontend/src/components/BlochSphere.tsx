@@ -120,8 +120,8 @@ function BlochSphereSVG({ coords }: { coords: BlochCoords }) {
     >
       <defs>
         <radialGradient id="sphereGrad" cx="40%" cy="35%">
-          <stop offset="0%" stopColor="#818cf8" stopOpacity="0.15" />
-          <stop offset="100%" stopColor="#312e81" stopOpacity="0.08" />
+          <stop offset="0%" stopColor="#a5b4fc" stopOpacity="0.12" />
+          <stop offset="100%" stopColor="#4338ca" stopOpacity="0.05" />
         </radialGradient>
         <marker
           id="arrowHead"
@@ -131,7 +131,7 @@ function BlochSphereSVG({ coords }: { coords: BlochCoords }) {
           refY="4"
           orient="auto"
         >
-          <path d="M0,1 L6,4 L0,7" fill="#f59e0b" />
+          <path d="M0,1 L6,4 L0,7" fill="#fbbf24" />
         </marker>
       </defs>
 
@@ -142,9 +142,9 @@ function BlochSphereSVG({ coords }: { coords: BlochCoords }) {
         cy={cy}
         r={R}
         fill="none"
-        stroke="#6366f1"
+        stroke="#a5b4fc"
         strokeWidth="1.5"
-        opacity="0.4"
+        opacity="0.3"
       />
 
       {/* Great circles */}
@@ -212,7 +212,7 @@ function BlochSphereSVG({ coords }: { coords: BlochCoords }) {
       <text
         x={cx + axes.zPos[0] * R - 4}
         y={cy + axes.zPos[1] * R - 8}
-        fill="#a5f3fc"
+        fill="#bae6fd"
         fontSize="11"
         fontWeight="bold"
       >
@@ -221,7 +221,7 @@ function BlochSphereSVG({ coords }: { coords: BlochCoords }) {
       <text
         x={cx + axes.zNeg[0] * R - 4}
         y={cy + axes.zNeg[1] * R + 14}
-        fill="#fca5a5"
+        fill="#fecaca"
         fontSize="11"
         fontWeight="bold"
       >
@@ -234,7 +234,7 @@ function BlochSphereSVG({ coords }: { coords: BlochCoords }) {
         y1={cy}
         x2={arrowEnd.x}
         y2={arrowEnd.y}
-        stroke="#f59e0b"
+        stroke="#fbbf24"
         strokeWidth="2.5"
         markerEnd="url(#arrowHead)"
         opacity={tipOpacity}
@@ -245,7 +245,7 @@ function BlochSphereSVG({ coords }: { coords: BlochCoords }) {
         cx={arrowEnd.x}
         cy={arrowEnd.y}
         r="4"
-        fill="#f59e0b"
+        fill="#fbbf24"
         opacity={tipOpacity}
       />
 
@@ -299,7 +299,7 @@ export function BlochSpherePanel({
             className="rounded bg-slate-900/50 px-2 py-1.5 border border-slate-700/30"
           >
             <span className="text-[10px] uppercase text-slate-500">{axis}</span>
-            <span className="ml-1 font-mono text-xs text-amber-400">
+            <span className="ml-1 font-mono text-xs text-amber-300/80">
               {coords[axis].toFixed(3)}
             </span>
           </div>

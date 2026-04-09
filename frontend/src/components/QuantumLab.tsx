@@ -249,7 +249,7 @@ export function QuantumLab() {
             <button
               onClick={handleSimulate}
               disabled={loading || gates.length === 0}
-              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-white transition-all duration-200 hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
+              className="flex items-center gap-2 rounded-lg bg-indigo-500/80 px-6 py-2.5 font-semibold text-white transition-all duration-200 hover:bg-indigo-400/80 hover:shadow-lg hover:shadow-indigo-400/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

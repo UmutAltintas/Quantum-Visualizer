@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 body {
-  background: #0a0f1e;
-  color: #f1f5f9;
+  background: #111827;
+  color: #e2e8f0;
 }
 
 /* Subtle grid background for the main area */
@@ -11,7 +11,7 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image: radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.04) 1px, transparent 0);
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.035) 1px, transparent 0);
   background-size: 32px 32px;
 }
 

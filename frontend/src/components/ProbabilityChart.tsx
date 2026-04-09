@@ -18,14 +18,14 @@ interface ProbabilityChartProps {
 }
 
 const COLORS = [
-  "#6366f1",
-  "#8b5cf6",
-  "#a78bfa",
+  "#a5b4fc",
   "#c4b5fd",
+  "#d8b4fe",
+  "#e9d5ff",
+  "#93c5fd",
+  "#a5b4fc",
   "#818cf8",
-  "#6366f1",
-  "#4f46e5",
-  "#4338ca",
+  "#7c83db",
 ];
 
 export function ProbabilityChart({ probabilities }: ProbabilityChartProps) {

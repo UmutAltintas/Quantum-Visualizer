@@ -44,7 +44,7 @@ function CircuitCell({
         transition-all duration-200
         ${
           isOver
-            ? "border-indigo-400 bg-indigo-400/15 shadow-[0_0_12px_rgba(99,102,241,0.3)]"
+            ? "border-indigo-300/60 bg-indigo-300/10 shadow-[0_0_12px_rgba(165,180,252,0.2)]"
             : gate
               ? "border-transparent"
               : "border-transparent hover:border-slate-600/50 hover:bg-slate-700/20"

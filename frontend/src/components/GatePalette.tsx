@@ -42,7 +42,7 @@ function DraggablePaletteGate({ gate }: { gate: GateInfo }) {
             animate={{ opacity: 1, scale: 1, x: 0 }}
             exit={{ opacity: 0, scale: 0.9, x: -4 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute left-full top-1/2 z-50 ml-3 w-72 -translate-y-1/2 rounded-lg bg-slate-800/95 p-4 text-sm text-slate-200 shadow-2xl border border-slate-600/50 backdrop-blur-sm"
+            className="absolute left-full top-1/2 z-50 ml-3 w-72 -translate-y-1/2 rounded-lg bg-slate-800/90 p-4 text-sm text-slate-300 shadow-xl border border-slate-600/40 backdrop-blur-sm"
           >
             <div
               className="flex items-center gap-2 font-bold mb-2"
@@ -55,7 +55,7 @@ function DraggablePaletteGate({ gate }: { gate: GateInfo }) {
             </p>
             {/* Matrix representation */}
             <div className="flex items-center gap-2 rounded-md bg-slate-900/60 px-3 py-2 font-mono text-xs text-slate-400 border border-slate-700/50">
-              <Sigma className="h-3.5 w-3.5 shrink-0 text-indigo-400" />
+              <Sigma className="h-3.5 w-3.5 shrink-0 text-indigo-300/70" />
               <span>{gate.matrix}</span>
             </div>
             {/* Arrow */}

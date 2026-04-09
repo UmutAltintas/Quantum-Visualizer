@@ -83,7 +83,7 @@ export const GATE_CATALOG: GateInfo[] = [
   {
     type: "H",
     label: "H",
-    color: "#6366f1",
+    color: "#a5b4fc",
     description:
       "Hadamard gate – puts a qubit into an equal superposition of |0⟩ and |1⟩. It's like flipping a perfectly fair coin.",
     matrix: "1/√2 × [[1, 1], [1, -1]]",
@@ -93,7 +93,7 @@ export const GATE_CATALOG: GateInfo[] = [
   {
     type: "X",
     label: "X",
-    color: "#ef4444",
+    color: "#fca5a5",
     description:
       "Pauli-X gate – flips |0⟩ to |1⟩ and vice versa. It behaves like a classical NOT gate.",
     matrix: "[[0, 1], [1, 0]]",
@@ -103,7 +103,7 @@ export const GATE_CATALOG: GateInfo[] = [
   {
     type: "Y",
     label: "Y",
-    color: "#f59e0b",
+    color: "#fcd34d",
     description:
       "Pauli-Y gate – rotates the qubit state around the Y-axis of the Bloch sphere, combining a bit-flip and a phase-flip.",
     matrix: "[[0, -i], [i, 0]]",
@@ -113,7 +113,7 @@ export const GATE_CATALOG: GateInfo[] = [
   {
     type: "Z",
     label: "Z",
-    color: "#10b981",
+    color: "#86efac",
     description:
       "Pauli-Z gate – flips the phase of |1⟩ without changing |0⟩. It adds a minus sign to the |1⟩ component.",
     matrix: "[[1, 0], [0, -1]]",
@@ -123,7 +123,7 @@ export const GATE_CATALOG: GateInfo[] = [
   {
     type: "Rx",
     label: "Rx",
-    color: "#f472b6",
+    color: "#f9a8d4",
     description:
       "Rotation-X gate – rotates the qubit around the X-axis of the Bloch sphere by a specified angle θ.",
     matrix: "[[cos(θ/2), -i·sin(θ/2)], [-i·sin(θ/2), cos(θ/2)]]",
@@ -133,7 +133,7 @@ export const GATE_CATALOG: GateInfo[] = [
   {
     type: "Ry",
     label: "Ry",
-    color: "#fb923c",
+    color: "#fdba74",
     description:
       "Rotation-Y gate – rotates the qubit around the Y-axis of the Bloch sphere by a specified angle θ.",
     matrix: "[[cos(θ/2), -sin(θ/2)], [sin(θ/2), cos(θ/2)]]",
@@ -143,7 +143,7 @@ export const GATE_CATALOG: GateInfo[] = [
   {
     type: "Rz",
     label: "Rz",
-    color: "#34d399",
+    color: "#a7f3d0",
     description:
       "Rotation-Z gate – rotates the qubit around the Z-axis of the Bloch sphere by a specified angle θ.",
     matrix: "[[e^(-iθ/2), 0], [0, e^(iθ/2)]]",
@@ -153,7 +153,7 @@ export const GATE_CATALOG: GateInfo[] = [
   {
     type: "CX",
     label: "CX",
-    color: "#3b82f6",
+    color: "#93c5fd",
     description:
       "Controlled-NOT (CNOT) gate – flips the target qubit only if the control qubit is |1⟩. It creates entanglement between two qubits.",
     matrix: "[[1,0,0,0], [0,1,0,0], [0,0,0,1], [0,0,1,0]]",
@@ -163,7 +163,7 @@ export const GATE_CATALOG: GateInfo[] = [
   {
     type: "SWAP",
     label: "SW",
-    color: "#a78bfa",
+    color: "#c4b5fd",
     description:
       "SWAP gate – exchanges the quantum states of two qubits. If qubit A is |0⟩ and qubit B is |1⟩, after SWAP they switch.",
     matrix: "[[1,0,0,0], [0,0,1,0], [0,1,0,0], [0,0,0,1]]",
@@ -173,7 +173,7 @@ export const GATE_CATALOG: GateInfo[] = [
   {
     type: "CCX",
     label: "CCX",
-    color: "#06b6d4",
+    color: "#67e8f9",
     description:
       "Toffoli (CCX) gate – flips the target qubit only when both control qubits are |1⟩. It's a universal gate for classical computation.",
     matrix: "8×8 identity with bottom-right 2×2 = [[0,1],[1,0]]",
